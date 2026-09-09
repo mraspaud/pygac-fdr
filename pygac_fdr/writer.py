@@ -241,6 +241,23 @@ def _get_temp_cov(scene):
     return tstart.dt, tend.dt
 
 
+#: What pygac records on a pass about how it was navigated and how far the result
+#: can be trusted, forwarded here so the product can state it. A pass that was
+#: refused carries only some of these, so each is copied only when present.
+ATTRIBUTES_RECORDED_BY_THE_READER = (
+    "georeferenced",
+    "gcp_count",
+    "median_gcp_distance",
+    "estimated_attitude_in_degrees",
+    "estimated_time_offset_in_seconds",
+    "clock_table_covers_the_pass",
+    "unexplained_displacement_in_pixels",
+    "pre_alignment_applied",
+    "navigation_metadata_schema_version",
+    "uncertainties_computed",
+)
+
+
 class NetcdfWriter:
     """Write AVHRR GAC scenes to netCDF."""
 
@@ -508,16 +525,9 @@ class GlobalAttributeComposer:
         }
         if time_cov_end:  # Otherwise still operational
             global_attrs["time_coverage_end"] = time_cov_end.strftime(TIME_FMT)
-        with suppress(KeyError):
-            global_attrs["median_gcp_distance"] = ch_attrs["median_gcp_distance"]
-        with suppress(KeyError):
-            global_attrs["estimated_attitude_in_degrees"] = ch_attrs["estimated_attitude_in_degrees"]
-        with suppress(KeyError):
-            global_attrs["estimated_time_offset_in_seconds"] = ch_attrs["estimated_time_offset_in_seconds"]
-        with suppress(KeyError):
-            global_attrs["georeferenced"] = ch_attrs["georeferenced"]
-        with suppress(KeyError):
-            global_attrs["uncertainties_computed"] = ch_attrs["uncertainties_computed"]
+        global_attrs.update(
+            {name: ch_attrs[name] for name in ATTRIBUTES_RECORDED_BY_THE_READER if name in ch_attrs}
+        )
 
         return global_attrs
 

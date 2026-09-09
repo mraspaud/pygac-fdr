@@ -259,6 +259,34 @@ class TestNetcdfWriter:
             self._drop_dynamic_attrs(written.attrs)
             xr.testing.assert_identical(written, expected)
 
+    def test_navigation_metadata_reaches_the_product(self, scene, writer):
+        """Everything the georeferencing recorded has to survive into the file.
+
+        The reader states on each pass what it fitted and how far the result can
+        be trusted. Only part of that was forwarded, so a product could not say
+        how many control points its navigation rested on, nor whether a clock
+        measurement had reached the pass at all.
+        """
+        recorded = {
+            "gcp_count": 431,
+            "clock_table_covers_the_pass": True,
+            "unexplained_displacement_in_pixels": 1.75,
+            "navigation_metadata_schema_version": 3,
+            "pre_alignment_applied": True,
+        }
+        # NetCDF has no boolean type, so the CF writer spells one as a string,
+        # the same way the older ``georeferenced`` attribute has always appeared.
+        on_file = {name: "true" if value is True else value for name, value in recorded.items()}
+
+        scene["4"].attrs.update(recorded)
+        filename = writer.write(scene)
+        try:
+            with xr.open_dataset(filename) as written:
+                for name, value in on_file.items():
+                    assert written.attrs[name] == value
+        finally:
+            os.unlink(filename)
+
     def _drop_dynamic_attrs(self, attrs):
         for drop_attrs in [
             "history",
