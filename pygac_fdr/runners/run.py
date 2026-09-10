@@ -33,6 +33,24 @@ from pygac_fdr.writer import NetcdfWriter
 LOG = logging.getLogger(LOGGER_NAME)
 
 
+
+def apply_chunk_size(controls, environment):
+    """Apply the configured chunk size, or refuse if it cannot be applied.
+
+    The only thing that reads a chunk size any more is pyresample, and it reads
+    the environment variable once, as it is imported. By the time a configuration
+    file has been parsed that has long happened, so a size named here cannot be
+    made to take effect. Refusing says so; the alternative is a run that used a
+    chunk size other than the one it was given and never mentioned it.
+    """
+    wanted = controls["pytroll_chunk_size"]
+    raise ValueError(
+        "pytroll_chunk_size is set to {0} in the configuration, but it can only be "
+        "applied from the environment: run with PYTROLL_CHUNK_SIZE={0} instead.".format(
+            wanted
+        )
+    )
+
 class HideGzFSFile(FSFile):
     _gz_suffix = re.compile(r"\.gz$")
 
