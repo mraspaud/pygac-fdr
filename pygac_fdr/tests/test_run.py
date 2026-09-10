@@ -31,3 +31,13 @@ def test_a_chunk_size_already_in_the_environment_is_accepted():
     should proceed.
     """
     apply_chunk_size({"pytroll_chunk_size": 512}, environment={"PYTROLL_CHUNK_SIZE": "512"})
+
+
+def test_a_configuration_that_names_no_chunk_size_is_left_alone():
+    """Most configurations say nothing about chunking, and that is not an error.
+
+    Saying nothing means taking dask's own default, which is what a run without
+    the setting has always done. Only a configuration that asks for something it
+    cannot have is worth refusing.
+    """
+    apply_chunk_size({}, environment={})
