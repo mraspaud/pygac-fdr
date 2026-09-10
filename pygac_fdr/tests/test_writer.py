@@ -287,6 +287,28 @@ class TestNetcdfWriter:
         finally:
             os.unlink(filename)
 
+    def test_the_navigation_record_reaches_the_product(self, scene, writer):
+        """The one record the reader gathers travels as a whole, not name by name.
+
+        Each hop between the reader and the file forwards attributes by name and
+        keeps its own list of the names it knows, so a fact added at one end is
+        dropped in silence unless every list along the way is edited. That is how
+        the control-point count came to be missing from products while sitting on
+        the dataset all along. Forwarding the record itself makes the lists a
+        one-time cost: what it holds can grow without any hop being touched again.
+
+        The CF writer flattens a mapping into ``parent_child`` names, which is how
+        ``orbital_parameters`` has always appeared on these files.
+        """
+        scene["4"].attrs["navigation"] = {"gcp_count": 431, "schema_version": 3}
+
+        filename = writer.write(scene)
+        try:
+            with xr.open_dataset(filename) as written:
+                assert written.attrs["navigation_gcp_count"] == 431
+        finally:
+            os.unlink(filename)
+
     def _drop_dynamic_attrs(self, attrs):
         for drop_attrs in [
             "history",

@@ -245,6 +245,7 @@ def _get_temp_cov(scene):
 #: can be trusted, forwarded here so the product can state it. A pass that was
 #: refused carries only some of these, so each is copied only when present.
 ATTRIBUTES_RECORDED_BY_THE_READER = (
+    "navigation",
     "georeferenced",
     "gcp_count",
     "median_gcp_distance",
