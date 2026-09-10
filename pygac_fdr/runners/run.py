@@ -18,11 +18,11 @@
 
 import argparse
 import logging
+import os
 import re
 import tarfile
 from contextlib import closing, suppress
 
-import satpy
 from satpy.readers import FSFile
 
 from pygac_fdr.config import read_config
@@ -160,7 +160,7 @@ def main():
         config["controls"]["debug"] = args.debug
 
     # Process files
-    satpy.CHUNK_SIZE = config["controls"].get("pytroll_chunk_size", 1024)
+    apply_chunk_size(config["controls"], os.environ)
     for filename in args.filenames:
         if tarfile.is_tarfile(filename):
             process_tarball(filename, config)

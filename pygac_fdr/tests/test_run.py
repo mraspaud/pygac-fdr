@@ -41,3 +41,23 @@ def test_a_configuration_that_names_no_chunk_size_is_left_alone():
     cannot have is worth refusing.
     """
     apply_chunk_size({}, environment={})
+
+
+def test_a_run_refuses_before_it_processes_anything(tmp_path, monkeypatch):
+    """A chunk size that cannot take effect stops the run, not the thousandth pass.
+
+    The check is worth nothing at the end of a campaign. Refusing while the first file
+    is still unopened is what makes it a check rather than a postmortem, so it belongs
+    before the loop over the files.
+    """
+    import sys
+
+    from pygac_fdr.runners.run import main
+
+    settings = tmp_path / "pygac-fdr.yaml"
+    settings.write_text("controls:\n    pytroll_chunk_size: 1024\noutput:\n    output_dir: .\n")
+    monkeypatch.delenv("PYTROLL_CHUNK_SIZE", raising=False)
+    monkeypatch.setattr(sys, "argv", ["pygac-fdr-run", "--cfg", str(settings), "no_such_file.l1b"])
+
+    with pytest.raises(ValueError, match="PYTROLL_CHUNK_SIZE"):
+        main()
