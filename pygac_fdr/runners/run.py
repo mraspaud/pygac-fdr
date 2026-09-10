@@ -33,15 +33,19 @@ from pygac_fdr.writer import NetcdfWriter
 LOG = logging.getLogger(LOGGER_NAME)
 
 
-
 def apply_chunk_size(controls, environment):
-    """Apply the configured chunk size, or refuse if it cannot be applied.
+    """Check that the configured chunk size is one that can actually take effect.
 
     The only thing that reads a chunk size any more is pyresample, and it reads
     the environment variable once, as it is imported. By the time a configuration
     file has been parsed that has long happened, so a size named here cannot be
-    made to take effect. Refusing says so; the alternative is a run that used a
-    chunk size other than the one it was given and never mentioned it.
+    made to take effect from here.
+
+    A configuration that names no size takes dask's own default, as a run without
+    the setting always has. One that names the size the environment already
+    carries is describing what is already true. One that names anything else is
+    refused, because the alternative is a run that used a chunk size other than
+    the one it was given and never mentioned it.
     """
     wanted = controls.get("pytroll_chunk_size")
     if wanted is None:
@@ -54,6 +58,7 @@ def apply_chunk_size(controls, environment):
             wanted
         )
     )
+
 
 class HideGzFSFile(FSFile):
     _gz_suffix = re.compile(r"\.gz$")
