@@ -44,6 +44,8 @@ def apply_chunk_size(controls, environment):
     chunk size other than the one it was given and never mentioned it.
     """
     wanted = controls["pytroll_chunk_size"]
+    if environment.get("PYTROLL_CHUNK_SIZE") == str(wanted):
+        return
     raise ValueError(
         "pytroll_chunk_size is set to {0} in the configuration, but it can only be "
         "applied from the environment: run with PYTROLL_CHUNK_SIZE={0} instead.".format(

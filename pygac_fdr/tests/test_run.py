@@ -20,3 +20,14 @@ def test_a_chunk_size_that_cannot_be_applied_is_refused():
     """
     with pytest.raises(ValueError, match="PYTROLL_CHUNK_SIZE"):
         apply_chunk_size({"pytroll_chunk_size": 512}, environment={})
+
+
+def test_a_chunk_size_already_in_the_environment_is_accepted():
+    """When the environment already says it, the setting is honoured and nothing is wrong.
+
+    This is how a chunk size actually reaches pyresample: named before the process
+    starts, so that it is there to be read at import. A configuration that agrees
+    with the environment is describing what is already true, and a run given both
+    should proceed.
+    """
+    apply_chunk_size({"pytroll_chunk_size": 512}, environment={"PYTROLL_CHUNK_SIZE": "512"})
