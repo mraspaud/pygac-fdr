@@ -180,9 +180,13 @@ DEFAULT_ENCODING = {
         "zlib": True,
         "complevel": 4,
     },
-    "num_flags": {"dtype": "<S50"},
 }  # refers to renamed datasets
 METOP_PRE_LAUNCH_NUMBERS = {"a": 2, "b": 1, "c": 3}
+QUALITY_FLAG_MASKS = np.array([1, 2, 4, 8, 16, 32], dtype=np.uint8)
+QUALITY_FLAG_MEANINGS = (
+    "fatal_error insufficient_data_for_calibration earth_location_data_not_available "
+    "channel_3_blackbody_contamination channel_4_blackbody_contamination channel_5_blackbody_contamination"
+)
 
 
 def get_platform_short_name(pygac_name):
@@ -419,6 +423,7 @@ class NetcdfWriter:
         return ac.get_global_attrs()
 
     def _preproc_scene(self, scene):
+        _pack_quality_flags(scene)
         CoordinateProcessor().update_coordinates(scene)
         AttributeProcessor().update_attrs(scene)
         self._rename_datasets(scene)
@@ -594,7 +599,7 @@ class AttributeProcessor:
     def _set_custom_attrs(self, scene):
         """Set custom dataset attributes."""
         scene["qual_flags"].attrs["comment"] = (
-            "Seven binary quality flags are provided per scanline. See the num_flags coordinate for their meanings."
+            "Six binary quality flags are packed into one byte per scanline. See flag_masks and flag_meanings."
         )
 
 
@@ -648,6 +653,15 @@ class CoordinateProcessor:
     def _update_xy_coord_attrs(self, scene, ds_name):
         scene[ds_name].coords["x"].attrs.update({"axis": "X", "long_name": "Pixel number"})
         scene[ds_name].coords["y"].attrs.update({"axis": "Y", "long_name": "Line number"})
+
+
+def _pack_quality_flags(scene):
+    """Pack pygac's six per-scanline flags (the table's columns after the scan line number) into one byte."""
+    table = scene["qual_flags"]
+    masks = xr.DataArray(QUALITY_FLAG_MASKS, dims="num_flags")
+    packed = (table.isel(num_flags=slice(1, None)) * masks).sum("num_flags").astype(np.uint8)
+    packed.attrs = dict(table.attrs, flag_masks=QUALITY_FLAG_MASKS, flag_meanings=QUALITY_FLAG_MEANINGS)
+    scene["qual_flags"] = packed
 
 
 def _has_xy_dims(dataset):

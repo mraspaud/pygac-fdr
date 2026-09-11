@@ -222,17 +222,20 @@ class TestNetcdfWriter:
             },
         )
         qual_flags = xr.DataArray(
-            SEVEN_COLUMN_QUALITY_FLAGS,
-            dims=("y", "num_flags"),
+            np.array([2, 33], dtype=np.uint8),
+            dims=("y",),
             coords={
                 "acq_time": acq_time,
                 "y": y,
             },
             attrs={
                 "long_name": "qual_flags",
-                "comment": "Seven binary quality flags are provided per "
-                "scanline. See the num_flags coordinate for their "
-                "meanings.",
+                "flag_masks": np.array([1, 2, 4, 8, 16, 32], dtype=np.uint8),
+                "flag_meanings": "fatal_error insufficient_data_for_calibration earth_location_data_not_available "
+                "channel_3_blackbody_contamination channel_4_blackbody_contamination "
+                "channel_5_blackbody_contamination",
+                "comment": "Six binary quality flags are packed into one byte per scanline. "
+                "See flag_masks and flag_meanings.",
             },
         )
 
