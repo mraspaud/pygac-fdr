@@ -99,3 +99,11 @@ def test_a_pass_yields_a_pps_file_when_the_configuration_asks_for_one(tmp_path, 
                      _config(tmp_path, {"pps": {"output_dir": str(tmp_path / "pps")}}))
     assert [path.name for path in (tmp_path / "pps").iterdir()] == [
         "S_NWC_avhrr_noaa19_18286_20090701T1216000Z_20090701T1227000Z.nc"]
+
+
+def test_a_pass_yields_no_pps_file_when_the_configuration_does_not_ask(tmp_path, monkeypatch):
+    """PPS output is opted into, like the quicklook: a configuration without a pps block writes only the FDR."""
+    monkeypatch.setattr(run, "read_file", _read_pass)
+    config = _config(tmp_path, {})
+    assert (run.process_file("ESR.LHRR.M1.D16087.S2023.E2037.B01828628.BN", config),
+            [path.name for path in tmp_path.iterdir()]) == (True, ["fdr"])

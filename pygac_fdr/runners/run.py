@@ -83,11 +83,11 @@ def process_file(filename, config):
             debug=config["controls"].get("debug"),
         )
 
-        pps_scene = scene_for_pps(scene)
+        pps_config = config["output"].get("pps")
+        pps_scene = scene_for_pps(scene) if pps_config else None
         writer.write(scene=scene)
-        write_pps_file(
-            pps_scene, config["output"]["pps"]["output_dir"], orbit_number=scene.attrs["orbit_number_start"]
-        )
+        if pps_config:
+            write_pps_file(pps_scene, pps_config["output_dir"], orbit_number=scene.attrs["orbit_number_start"])
         success = True
         if image_config := config["output"].get("image"):
             composite = image_config["composite"]
