@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the runner: its own settings, and the files it writes for a pass."""
 
+import sys
+
 import numpy as np
 import pytest
 from pyresample.geometry import SwathDefinition
@@ -125,3 +127,19 @@ def test_a_pass_whose_file_name_gives_no_orbit_still_yields_a_pps_file(tmp_path,
     run.process_file("not_a_level1b_name.l1b", _config(tmp_path, {"pps": {"output_dir": str(tmp_path / "pps")}}))
     assert [path.name for path in (tmp_path / "pps").iterdir()] == [
         "S_NWC_avhrr_noaa19_00000_20090701T1216000Z_20090701T1227000Z.nc"]
+
+
+def test_the_command_line_can_send_pps_files_to_a_directory(tmp_path, monkeypatch):
+    """Like --output-dir for the FDR, --pps-output-dir names where the PPS files go, and asks for them.
+
+    A configuration without a pps block would otherwise ignore the flag silently.
+    """
+    cfg = tmp_path / "pygac-fdr.yaml"
+    cfg.write_text("controls:\n  reader_kwargs: {}\noutput:\n  output_dir: fdr\n")
+    level1b = tmp_path / "NSS.GHRR.NL.D02187.S1904.E2058.B1831920.WI"
+    level1b.write_bytes(b"")
+    seen = []
+    monkeypatch.setattr(run, "process_file", lambda filename, config: seen.append(config["output"].get("pps")))
+    monkeypatch.setattr(sys, "argv", ["pygac-fdr-run", "--cfg", str(cfg), "--pps-output-dir", "pps", str(level1b)])
+    run.main()
+    assert seen == [{"output_dir": "pps"}]

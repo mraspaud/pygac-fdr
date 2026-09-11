@@ -130,6 +130,10 @@ def main():
         help="Output directory. Overrides entry in the configuration file.",
     )
     parser.add_argument(
+        "--pps-output-dir",
+        help="Write a PPS level1c file for every pass into this directory. Overrides entry in the configuration file.",
+    )
+    parser.add_argument(
         "--tle-dir",
         help="Directory containing TLE files. Overrides entry in the configuration file.",
     )
@@ -153,6 +157,7 @@ def main():
     config = read_config(args.cfg)
     if args.output_dir:
         config["output"]["output_dir"] = args.output_dir
+    config["output"]["pps"] = {"output_dir": args.pps_output_dir}
     if args.tle_dir:
         config["controls"]["reader_kwargs"]["tle_dir"] = args.tle_dir
     if args.georef:
