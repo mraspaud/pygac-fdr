@@ -26,6 +26,7 @@ from contextlib import closing, suppress
 from satpy.readers import FSFile
 
 from pygac_fdr.config import read_config
+from pygac_fdr.pps import scene_for_pps, write_pps_file
 from pygac_fdr.reader import read_file
 from pygac_fdr.utils import LOGGER_NAME, TarFileSystem, logging_on
 from pygac_fdr.writer import NetcdfWriter
@@ -82,7 +83,11 @@ def process_file(filename, config):
             debug=config["controls"].get("debug"),
         )
 
+        pps_scene = scene_for_pps(scene)
         writer.write(scene=scene)
+        write_pps_file(
+            pps_scene, config["output"]["pps"]["output_dir"], orbit_number=scene.attrs["orbit_number_start"]
+        )
         success = True
         if image_config := config["output"].get("image"):
             composite = image_config["composite"]

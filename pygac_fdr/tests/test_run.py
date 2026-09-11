@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the runner's own settings, as opposed to what it processes."""
+"""Tests for the runner: its own settings, and the files it writes for a pass."""
 
+import numpy as np
 import pytest
+from pyresample.geometry import SwathDefinition
 
+from pygac_fdr.runners import run
 from pygac_fdr.runners.run import apply_chunk_size
+from pygac_fdr.tests.test_pps import _scene_pps_can_convert
 
 
 def test_a_chunk_size_that_cannot_be_applied_is_refused():
@@ -61,3 +65,37 @@ def test_a_run_refuses_before_it_processes_anything(tmp_path, monkeypatch):
 
     with pytest.raises(ValueError, match="PYTROLL_CHUNK_SIZE"):
         main()
+
+
+def _read_pass(filename, reader_kwargs=None):
+    """Stand in for the level 1b reader: a pass shaped as read_file returns it, enough for the FDR and PPS writers."""
+    scene = _scene_pps_can_convert()
+    scene.attrs.update(sensor="avhrr-3", orbit_number_start=18286)
+    area = SwathDefinition(scene["longitude"].values, scene["latitude"].values)
+    for name in ("1", "2", "4"):
+        scene[name].attrs.update(area=area, resolution=1050.0, sun_earth_distance_correction_factor=0.9,
+                                 calib_coeffs_version="patmos-x 2012",
+                                 gac_header=np.array([(1, 2)], dtype=[("foo", "f4"), ("bar", "i4")]))
+    return scene
+
+
+def _config(tmp_path, output):
+    """A configuration writing the FDR into tmp_path/fdr, with whatever else the output section names."""
+    (tmp_path / "fdr").mkdir()
+    return {"controls": {"debug": True, "reader_kwargs": {}}, "netcdf": {},
+            "global_attrs": {"Conventions": "CF-1.8", "product_version": "1.2.3"},
+            "output": {"output_dir": str(tmp_path / "fdr"), **output}}
+
+
+def test_a_pass_yields_a_pps_file_when_the_configuration_asks_for_one(tmp_path, monkeypatch):
+    """One reading of the level 1b file serves both products, so PPS gets its file from the same run.
+
+    The PPS file is named after the orbit the pass starts in, which the reader
+    takes from the level 1b file name.
+    """
+    monkeypatch.setattr(run, "read_file", _read_pass)
+    (tmp_path / "pps").mkdir()
+    run.process_file("ESR.LHRR.M1.D16087.S2023.E2037.B01828628.BN",
+                     _config(tmp_path, {"pps": {"output_dir": str(tmp_path / "pps")}}))
+    assert [path.name for path in (tmp_path / "pps").iterdir()] == [
+        "S_NWC_avhrr_noaa19_18286_20090701T1216000Z_20090701T1227000Z.nc"]
