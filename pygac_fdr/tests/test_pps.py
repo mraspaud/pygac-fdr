@@ -128,3 +128,16 @@ def test_the_pps_copy_of_a_read_pass_holds_all_pps_converts(tmp_path):
     write_pps_file(scene_for_pps(_scene_pps_can_convert()), tmp_path)
     assert [path.name for path in tmp_path.iterdir()] == [
         "S_NWC_avhrr_noaa19_00000_20090701T1216000Z_20090701T1227000Z.nc"]
+
+
+def test_the_pps_copy_keeps_every_channel_an_avhrr_generation_delivers():
+    """Channel names differ between AVHRR generations, and PPS converts each of them.
+
+    AVHRR/1 delivers channels 1 to 4, AVHRR/2 adds channel 5, and AVHRR/3 splits
+    channel 3 into 3a and 3b; a copy that drops one loses that channel from the PPS file.
+    """
+    scene = _scene_with_channel_4()
+    for name in ("1", "2", "3", "3a", "3b", "5"):
+        scene[name] = _swath_array(name, [[1.0, 2.0], [3.0, 4.0]])
+    assert sorted(dataset_id["name"] for dataset_id in scene_for_pps(scene).keys()) == [
+        "1", "2", "3", "3a", "3b", "4", "5"]

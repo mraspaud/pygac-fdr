@@ -21,8 +21,10 @@
 import satpy
 import xarray as xr
 
+from pygac_fdr.reader import BANDS
+
 PPS_INPUTS = (
-    "4",
+    *BANDS,
     "latitude", "longitude", "qual_flags",
     "solar_zenith_angle", "sensor_zenith_angle", "sun_sensor_azimuth_difference_angle",
 )
