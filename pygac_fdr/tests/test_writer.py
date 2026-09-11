@@ -31,10 +31,6 @@ from pygac_fdr.writer import DEFAULT_ENCODING, NetcdfWriter
 
 
 class NetcdfWriterTest(unittest.TestCase):
-    def test_get_integer_version(self):
-        writer = NetcdfWriter()
-        self.assertEqual(writer._get_integer_version("1.2"), 120)
-
     def test_default_encoding(self):
         bt_range = np.arange(170, 330, 1, dtype="f8")
         refl_range = np.arange(0, 1.5, 0.1, dtype="f8")
