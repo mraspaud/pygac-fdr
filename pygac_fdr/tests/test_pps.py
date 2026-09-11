@@ -3,6 +3,8 @@
 """Tests for handing a pass to PPS alongside the FDR."""
 
 import datetime as dt
+import subprocess
+import sys
 
 import numpy as np
 import satpy
@@ -81,3 +83,30 @@ def test_writing_for_pps_puts_one_pps_file_in_the_output_directory(tmp_path):
     write_pps_file(_scene_pps_can_convert(), tmp_path)
     assert [path.name for path in tmp_path.iterdir()] == [
         "S_NWC_avhrr_noaa19_00000_20090701T1216000Z_20090701T1227000Z.nc"]
+
+
+WRITE_IN_A_FRESH_INTERPRETER = """
+import sys
+
+import xarray as xr
+
+from pygac_fdr.pps import write_pps_file
+from pygac_fdr.tests.test_pps import _scene_pps_can_convert
+
+write_pps_file(_scene_pps_can_convert(), sys.argv[1])
+print(xr.get_options()["keep_attrs"])
+"""
+
+
+def test_writing_for_pps_leaves_xarray_keeping_attributes_as_it_found_it(tmp_path):
+    """The FDR written after a PPS file must come out as it would have without one.
+
+    Importing level1c4pps switches xarray to keeping attributes through
+    arithmetic for the whole process, which would reach the FDR writer on every
+    later pass of a tarball. It happens at the first import only, so the check
+    runs in an interpreter that has not imported level1c4pps yet, whatever other
+    tests in this process have done.
+    """
+    written = subprocess.run([sys.executable, "-c", WRITE_IN_A_FRESH_INTERPRETER, str(tmp_path)],
+                             capture_output=True, text=True, check=True)
+    assert written.stdout.split()[-1] == "default"

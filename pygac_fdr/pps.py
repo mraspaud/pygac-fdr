@@ -19,6 +19,7 @@
 """Hand a pass to PPS alongside the FDR."""
 
 import satpy
+import xarray as xr
 
 PPS_INPUTS = ("4",)
 
@@ -34,6 +35,9 @@ def scene_for_pps(scene):
 
 def write_pps_file(scene, output_dir):
     """Write the scene as a PPS level1c file into the output directory."""
+    # Importing level1c4pps switches xarray to keeping attributes for the whole process; undo that.
+    keep_attrs = xr.get_options()["keep_attrs"]
     from level1c4pps.lac2pps_lib import process_scene
 
+    xr.set_options(keep_attrs=keep_attrs)
     return process_scene(scene, out_path=str(output_dir))
