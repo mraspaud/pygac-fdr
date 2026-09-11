@@ -19,6 +19,7 @@
 """Read and calibrate AVHRR GAC level 1b data."""
 
 import os
+from contextlib import suppress
 
 import satpy
 import trollsift
@@ -38,6 +39,16 @@ GAC_FORMAT = (
     "{creation_site:3s}.{transfer_mode:4s}.{platform_id:2s}.D{start_time:%y%j.S%H%M}."
     "E{end_time:%H%M}.B{orbit_number:05d}{end_orbit_last_digits:02d}.{station:2s}"
 )
+
+
+def attrs_from_filename(basename):
+    """Read the orbit numbers and the receiving station from a level 1b file name."""
+    fname_info = trollsift.parse(GAC_FORMAT, basename)
+    return {
+        "orbit_number_start": fname_info["orbit_number"],
+        "orbit_number_end": fname_info["orbit_number"] // 100 * 100 + fname_info["end_orbit_last_digits"],
+        "ground_station": fname_info["station"],
+    }
 
 
 def read_file(filename, reader_kwargs=None):
@@ -78,18 +89,7 @@ def read_file(filename, reader_kwargs=None):
             "gac_filename": basename,
         }
     )
-    try:
-        fname_info = trollsift.parse(GAC_FORMAT, basename)
-    except ValueError:
-        return scene
-
-    orbit_number_end = fname_info["orbit_number"] // 100 * 100 + fname_info["end_orbit_last_digits"]
-    scene.attrs.update(
-        {
-            "orbit_number_start": fname_info["orbit_number"],
-            "orbit_number_end": orbit_number_end,
-            "ground_station": fname_info["station"],
-        }
-    )
+    with suppress(ValueError):
+        scene.attrs.update(attrs_from_filename(basename))
 
     return scene
