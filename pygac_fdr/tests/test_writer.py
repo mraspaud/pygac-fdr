@@ -283,6 +283,11 @@ class TestNetcdfWriter:
         with pytest.raises(ValueError, match="Minor/patch versions > 9 are not supported"):
             self._file_name_for_product_version(scene, tmp_path, "1.10.1")
 
+    def test_the_quality_flags_stay_one_unsigned_byte_on_file(self, output_file):
+        """CF flag masks must have the flags' own type, so the packed flags have to reach the file as uint8."""
+        with xr.open_dataset(output_file) as written:
+            assert written["qual_flags"].dtype == np.uint8
+
     def test_write(self, output_file, expected):
         with xr.open_dataset(output_file) as written:
             self._drop_dynamic_attrs(written.attrs)

@@ -175,8 +175,7 @@ DEFAULT_ENCODING = {
         "complevel": 4,
     },
     "qual_flags": {
-        "dtype": "int16",
-        "_FillValue": FILL_VALUE_INT16,
+        "dtype": "uint8",
         "zlib": True,
         "complevel": 4,
     },
