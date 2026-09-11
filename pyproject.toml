@@ -43,6 +43,9 @@ dependencies = [
 dev = [
     "pre-commit",
 ]
+pps = [
+    "level1c4pps",
+]
 tests = [
     "cfchecker >=4.1.0",
     "matplotlib",
