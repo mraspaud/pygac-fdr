@@ -110,3 +110,10 @@ def test_writing_for_pps_leaves_xarray_keeping_attributes_as_it_found_it(tmp_pat
     written = subprocess.run([sys.executable, "-c", WRITE_IN_A_FRESH_INTERPRETER, str(tmp_path)],
                              capture_output=True, text=True, check=True)
     assert written.stdout.split()[-1] == "default"
+
+
+def test_the_pps_file_is_named_after_the_orbit_it_is_given(tmp_path):
+    """PPS tells passes apart by the orbit number in the file name; without one, every pass would be orbit 00000."""
+    write_pps_file(_scene_pps_can_convert(), tmp_path, orbit_number=18286)
+    assert [path.name for path in tmp_path.iterdir()] == [
+        "S_NWC_avhrr_noaa19_18286_20090701T1216000Z_20090701T1227000Z.nc"]
