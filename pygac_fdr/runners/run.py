@@ -87,7 +87,7 @@ def process_file(filename, config):
         pps_scene = scene_for_pps(scene) if pps_config else None
         writer.write(scene=scene)
         if pps_config:
-            write_pps_file(pps_scene, pps_config["output_dir"], orbit_number=scene.attrs["orbit_number_start"])
+            write_pps_file(pps_scene, pps_config["output_dir"], orbit_number=scene.attrs.get("orbit_number_start", 0))
         success = True
         if image_config := config["output"].get("image"):
             composite = image_config["composite"]

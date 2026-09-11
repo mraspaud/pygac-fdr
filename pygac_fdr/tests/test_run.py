@@ -107,3 +107,21 @@ def test_a_pass_yields_no_pps_file_when_the_configuration_does_not_ask(tmp_path,
     config = _config(tmp_path, {})
     assert (run.process_file("ESR.LHRR.M1.D16087.S2023.E2037.B01828628.BN", config),
             [path.name for path in tmp_path.iterdir()]) == (True, ["fdr"])
+
+
+def test_a_pass_whose_file_name_gives_no_orbit_still_yields_a_pps_file(tmp_path, monkeypatch):
+    """The reader leaves out the start orbit when the level 1b file name follows no known pattern.
+
+    Losing the PPS file over that would cost PPS a pass it can still use, so the
+    file is written with orbit 00000, as level1c4pps does when no orbit is known.
+    """
+    def read_pass_without_orbit(filename, reader_kwargs=None):
+        scene = _read_pass(filename, reader_kwargs)
+        del scene.attrs["orbit_number_start"]
+        return scene
+
+    monkeypatch.setattr(run, "read_file", read_pass_without_orbit)
+    (tmp_path / "pps").mkdir()
+    run.process_file("not_a_level1b_name.l1b", _config(tmp_path, {"pps": {"output_dir": str(tmp_path / "pps")}}))
+    assert [path.name for path in (tmp_path / "pps").iterdir()] == [
+        "S_NWC_avhrr_noaa19_00000_20090701T1216000Z_20090701T1227000Z.nc"]
