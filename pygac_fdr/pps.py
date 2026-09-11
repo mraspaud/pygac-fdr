@@ -20,10 +20,13 @@
 
 import satpy
 
+PPS_INPUTS = ("4",)
+
 
 def scene_for_pps(scene):
-    """Give PPS a scene of its own that shares the pixels with the given one."""
+    """Give PPS a scene of its own, holding only the datasets PPS reads and sharing their pixels."""
     copy = satpy.Scene()
     for dataset_id in scene.keys():
-        copy[dataset_id] = scene[dataset_id].copy(deep=False)
+        if dataset_id["name"] in PPS_INPUTS:
+            copy[dataset_id] = scene[dataset_id].copy(deep=False)
     return copy

@@ -32,3 +32,15 @@ def test_the_pps_copy_shares_the_pixels_but_owns_its_metadata():
     copy = scene_for_pps(scene)
     copy["4"].attrs["name"] = "image3"
     assert (copy["4"].data is scene["4"].data, scene["4"].attrs["name"]) == (True, "4")
+
+
+def test_the_pps_copy_leaves_out_what_pps_never_reads():
+    """Terrain-corrected geolocation, control points and uncertainties are FDR products, not PPS input.
+
+    Handed to the PPS conversion, they would be written into the PPS file as they are,
+    the per-pixel uncertainty cube included.
+    """
+    scene = _scene_with_channel_4()
+    for name in ("tc_latitude", "gcp_x", "random_uncertainty"):
+        scene[name] = xr.DataArray(np.zeros(2), dims=("y",), attrs={"name": name})
+    assert sorted(dataset_id["name"] for dataset_id in scene_for_pps(scene).keys()) == ["4"]
