@@ -30,3 +30,10 @@ def scene_for_pps(scene):
         if dataset_id["name"] in PPS_INPUTS:
             copy[dataset_id] = scene[dataset_id].copy(deep=False)
     return copy
+
+
+def write_pps_file(scene, output_dir):
+    """Write the scene as a PPS level1c file into the output directory."""
+    from level1c4pps.lac2pps_lib import process_scene
+
+    return process_scene(scene, out_path=str(output_dir))
