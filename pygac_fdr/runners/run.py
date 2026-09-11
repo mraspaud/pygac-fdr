@@ -157,7 +157,8 @@ def main():
     config = read_config(args.cfg)
     if args.output_dir:
         config["output"]["output_dir"] = args.output_dir
-    config["output"]["pps"] = {"output_dir": args.pps_output_dir}
+    if args.pps_output_dir:
+        config["output"]["pps"] = {"output_dir": args.pps_output_dir}
     if args.tle_dir:
         config["controls"]["reader_kwargs"]["tle_dir"] = args.tle_dir
     if args.georef:

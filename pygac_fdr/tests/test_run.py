@@ -129,17 +129,37 @@ def test_a_pass_whose_file_name_gives_no_orbit_still_yields_a_pps_file(tmp_path,
         "S_NWC_avhrr_noaa19_00000_20090701T1216000Z_20090701T1227000Z.nc"]
 
 
+def _pps_block_main_passes_on(tmp_path, monkeypatch, configuration, *flags):
+    """Run main() on one level 1b file with the given YAML configuration and flags.
+
+    Returns the pps block of every configuration main() hands to process_file.
+    """
+    cfg = tmp_path / "pygac-fdr.yaml"
+    cfg.write_text(configuration)
+    level1b = tmp_path / "NSS.GHRR.NL.D02187.S1904.E2058.B1831920.WI"
+    level1b.write_bytes(b"")
+    seen = []
+    monkeypatch.setattr(run, "process_file", lambda filename, config: seen.append(config["output"].get("pps")))
+    monkeypatch.setattr(sys, "argv", ["pygac-fdr-run", "--cfg", str(cfg), *flags, str(level1b)])
+    run.main()
+    return seen
+
+
 def test_the_command_line_can_send_pps_files_to_a_directory(tmp_path, monkeypatch):
     """Like --output-dir for the FDR, --pps-output-dir names where the PPS files go, and asks for them.
 
     A configuration without a pps block would otherwise ignore the flag silently.
     """
-    cfg = tmp_path / "pygac-fdr.yaml"
-    cfg.write_text("controls:\n  reader_kwargs: {}\noutput:\n  output_dir: fdr\n")
-    level1b = tmp_path / "NSS.GHRR.NL.D02187.S1904.E2058.B1831920.WI"
-    level1b.write_bytes(b"")
-    seen = []
-    monkeypatch.setattr(run, "process_file", lambda filename, config: seen.append(config["output"].get("pps")))
-    monkeypatch.setattr(sys, "argv", ["pygac-fdr-run", "--cfg", str(cfg), "--pps-output-dir", "pps", str(level1b)])
-    run.main()
-    assert seen == [{"output_dir": "pps"}]
+    configuration = "controls:\n  reader_kwargs: {}\noutput:\n  output_dir: fdr\n"
+    assert _pps_block_main_passes_on(tmp_path, monkeypatch, configuration, "--pps-output-dir", "pps") == [
+        {"output_dir": "pps"}]
+
+
+def test_without_the_flag_the_configured_pps_directory_stands(tmp_path, monkeypatch):
+    """--pps-output-dir overrides the configuration only when it is given.
+
+    A run started without it must keep the pps block the configuration names,
+    not replace it with an empty directory.
+    """
+    configuration = "controls:\n  reader_kwargs: {}\noutput:\n  output_dir: fdr\n  pps:\n    output_dir: pps\n"
+    assert _pps_block_main_passes_on(tmp_path, monkeypatch, configuration) == [{"output_dir": "pps"}]
