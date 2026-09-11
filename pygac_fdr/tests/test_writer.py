@@ -152,6 +152,9 @@ class TestNetcdfWriter:
             "version_calib_coeffs": "patmos-x 2012",
             "Conventions": "CF-1.8",
             "product_version": "1.2.3",
+            "filename": "avhrr_gac_fdr_N15_19700101T000000Z_19700101T000001Z.nc",
+            # Ten points per edge, walking the corners of the 2x2 swath clockwise from the first pixel.
+            "geospatial_boundary": str([[5.0, 1.0]] * 10 + [[6.0, 2.0]] * 10 + [[8.0, 4.0]] * 10 + [[7.0, 3.0]] * 10),
         }
         if with_orbital_parameters:
             attrs["orbital_parameters_tle"] = "my_tle"
