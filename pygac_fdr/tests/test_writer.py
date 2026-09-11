@@ -30,6 +30,12 @@ from satpy.tests.utils import make_dataid
 from pygac_fdr.writer import DEFAULT_ENCODING, NetcdfWriter
 
 
+# As pygac delivers them: scan line number, then fatal error, calibration, earth location,
+# and blackbody contamination in channels 3, 4 and 5. Line 1 lacks calibration data;
+# line 2 is fatal and has channel 5 contaminated.
+SEVEN_COLUMN_QUALITY_FLAGS = [[1, 0, 1, 0, 0, 0, 0], [2, 1, 0, 0, 0, 0, 1]]
+
+
 class NetcdfWriterTest(unittest.TestCase):
     def test_default_encoding(self):
         bt_range = np.arange(170, 330, 1, dtype="f8")
@@ -121,7 +127,7 @@ class TestNetcdfWriter:
             },
         )
         scene[qual_flags_id] = xr.DataArray(
-            [[0, 1, 0], [0, 0, 1]],
+            SEVEN_COLUMN_QUALITY_FLAGS,
             dims=("y", "num_flags"),
             coords={
                 "acq_time": ("y", acq_time),
@@ -216,7 +222,7 @@ class TestNetcdfWriter:
             },
         )
         qual_flags = xr.DataArray(
-            [[0, 1, 0], [0, 0, 1]],
+            SEVEN_COLUMN_QUALITY_FLAGS,
             dims=("y", "num_flags"),
             coords={
                 "acq_time": acq_time,
