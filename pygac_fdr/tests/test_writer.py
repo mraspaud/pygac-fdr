@@ -34,7 +34,6 @@ class NetcdfWriterTest(unittest.TestCase):
     def test_get_integer_version(self):
         writer = NetcdfWriter()
         self.assertEqual(writer._get_integer_version("1.2"), 120)
-        self.assertEqual(writer._get_integer_version("12.3.4"), 1234)
         self.assertRaises(ValueError, writer._get_integer_version, "1.10.1")
 
     def test_default_encoding(self):
@@ -267,6 +266,10 @@ class TestNetcdfWriter:
     def test_a_three_number_product_version_names_the_file_with_all_three(self, scene, tmp_path):
         """The file name carries major, minor and patch number as one integer, for example 1.2.3 as 0123."""
         assert self._file_name_for_product_version(scene, tmp_path, "1.2.3") == "avhrr_fdr_0123.nc"
+
+    def test_a_two_digit_major_version_takes_the_thousands(self, scene, tmp_path):
+        """A major version of 10 or more simply adds digits in front, so 12.3.4 names the file with 1234."""
+        assert self._file_name_for_product_version(scene, tmp_path, "12.3.4") == "avhrr_fdr_1234.nc"
 
     def test_write(self, output_file, expected):
         with xr.open_dataset(output_file) as written:
