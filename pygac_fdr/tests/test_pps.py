@@ -117,3 +117,14 @@ def test_the_pps_file_is_named_after_the_orbit_it_is_given(tmp_path):
     write_pps_file(_scene_pps_can_convert(), tmp_path, orbit_number=18286)
     assert [path.name for path in tmp_path.iterdir()] == [
         "S_NWC_avhrr_noaa19_18286_20090701T1216000Z_20090701T1227000Z.nc"]
+
+
+def test_the_pps_copy_of_a_read_pass_holds_all_pps_converts(tmp_path):
+    """The copy is what reaches the PPS conversion, so it must carry every dataset the conversion reads.
+
+    Channels, geolocation, the three angles PPS uses and the quality flags;
+    a copy missing any of them fails the conversion for the whole pass.
+    """
+    write_pps_file(scene_for_pps(_scene_pps_can_convert()), tmp_path)
+    assert [path.name for path in tmp_path.iterdir()] == [
+        "S_NWC_avhrr_noaa19_00000_20090701T1216000Z_20090701T1227000Z.nc"]

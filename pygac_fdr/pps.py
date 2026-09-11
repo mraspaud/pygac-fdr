@@ -21,7 +21,11 @@
 import satpy
 import xarray as xr
 
-PPS_INPUTS = ("4",)
+PPS_INPUTS = (
+    "4",
+    "latitude", "longitude", "qual_flags",
+    "solar_zenith_angle", "sensor_zenith_angle", "sun_sensor_azimuth_difference_angle",
+)
 
 
 def scene_for_pps(scene):
