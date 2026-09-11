@@ -34,7 +34,6 @@ class NetcdfWriterTest(unittest.TestCase):
     def test_get_integer_version(self):
         writer = NetcdfWriter()
         self.assertEqual(writer._get_integer_version("1.2"), 120)
-        self.assertRaises(ValueError, writer._get_integer_version, "1.10.1")
 
     def test_default_encoding(self):
         bt_range = np.arange(170, 330, 1, dtype="f8")
@@ -270,6 +269,11 @@ class TestNetcdfWriter:
     def test_a_two_digit_major_version_takes_the_thousands(self, scene, tmp_path):
         """A major version of 10 or more simply adds digits in front, so 12.3.4 names the file with 1234."""
         assert self._file_name_for_product_version(scene, tmp_path, "12.3.4") == "avhrr_fdr_1234.nc"
+
+    def test_a_minor_version_of_ten_or_more_is_refused(self, scene, tmp_path):
+        """1.10.1 would collide with 2.0.1 in the file name, so the writer refuses it instead."""
+        with pytest.raises(ValueError, match="Minor/patch versions > 9 are not supported"):
+            self._file_name_for_product_version(scene, tmp_path, "1.10.1")
 
     def test_write(self, output_file, expected):
         with xr.open_dataset(output_file) as written:
