@@ -311,12 +311,14 @@ class NetcdfWriter:
         """Convert version string to integer.
 
         Examples:
+               1.2 ->  120
              1.2.3 ->  123
             12.3.4 -> 1234
 
-        Minor/patch versions > 9 are not supported.
+        A missing minor or patch number counts as zero. Minor/patch versions > 9 are not supported.
         """
-        numbers = Version(version).release
+        release = Version(version).release
+        numbers = release + (0,) * (3 - len(release))
         if numbers[1] > 9 or numbers[2] > 9:
             raise ValueError("Invalid version number: {}. Minor/patch versions > 9 are not supported".format(version))
         return sum(10**i * v for i, v in enumerate(reversed(numbers)))

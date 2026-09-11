@@ -254,6 +254,12 @@ class TestNetcdfWriter:
         yield filename
         os.unlink(filename)
 
+    def test_a_two_number_product_version_still_names_the_file(self, scene, tmp_path):
+        """A product version such as 1.2 carries no patch number, and the file must still get its name."""
+        writer = NetcdfWriter(output_dir=str(tmp_path), fname_fmt="avhrr_fdr_{version_int:04d}.nc",
+                              global_attrs={"Conventions": "CF-1.8", "product_version": "1.2"})
+        assert os.path.basename(writer.write(scene)) == "avhrr_fdr_0120.nc"
+
     def test_write(self, output_file, expected):
         with xr.open_dataset(output_file) as written:
             self._drop_dynamic_attrs(written.attrs)
