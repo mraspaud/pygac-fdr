@@ -29,7 +29,6 @@ from satpy.tests.utils import make_dataid
 
 from pygac_fdr.writer import DEFAULT_ENCODING, NetcdfWriter
 
-
 # As pygac delivers them: scan line number, then fatal error, calibration, earth location,
 # and blackbody contamination in channels 3, 4 and 5. Line 1 lacks calibration data;
 # line 2 is fatal and has channel 5 contaminated.
