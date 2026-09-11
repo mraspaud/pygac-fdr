@@ -56,7 +56,6 @@ netcdf:
     engine: netcdf4
     encoding:
         qual_flags:
-            'dtype': 'int16'
-            '_FillValue': -32767
+            'dtype': 'uint8'
             'zlib': True
             'complevel': 4
