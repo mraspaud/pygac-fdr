@@ -40,15 +40,27 @@ GAC_FORMAT = (
     "E{end_time:%H%M}.B{orbit_number:05d}{end_orbit_last_digits:02d}.{station:2s}"
 )
 
+ESA_FORMAT = (
+    "{creation_site:3s}.{transfer_mode:4s}.{platform_id:2s}.D{start_time:%y%j.S%H%M}."
+    "E{end_time:%H%M}.B{orbit_number:06d}{unexplained_digits:02d}.{station:2s}"
+)
+
 
 def attrs_from_filename(basename):
-    """Read the orbit numbers and the receiving station from a level 1b file name."""
-    fname_info = trollsift.parse(GAC_FORMAT, basename)
-    return {
-        "orbit_number_start": fname_info["orbit_number"],
-        "orbit_number_end": fname_info["orbit_number"] // 100 * 100 + fname_info["end_orbit_last_digits"],
-        "ground_station": fname_info["station"],
-    }
+    """Read the orbit numbers and the receiving station from a level 1b file name.
+
+    ESA archive names give no end orbit: the two digits after their start orbit
+    are not the end orbit's last two.
+    """
+    with suppress(ValueError):
+        fname_info = trollsift.parse(GAC_FORMAT, basename)
+        return {
+            "orbit_number_start": fname_info["orbit_number"],
+            "orbit_number_end": fname_info["orbit_number"] // 100 * 100 + fname_info["end_orbit_last_digits"],
+            "ground_station": fname_info["station"],
+        }
+    fname_info = trollsift.parse(ESA_FORMAT, basename)
+    return {"orbit_number_start": fname_info["orbit_number"], "ground_station": fname_info["station"]}
 
 
 def read_file(filename, reader_kwargs=None):
